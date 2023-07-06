@@ -1,3 +1,7 @@
+# Meant for playing this game: https://elgoog.im/dinosaur-game/
+# Make sure your window size is 1230px wide!
+
+
 import pyautogui
 import time
 from PIL import Image, ImageGrab
