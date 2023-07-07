@@ -9,35 +9,39 @@ from mss import mss
 import numpy as np
 
 # Define the range of x-coordinates to check
-START_X = 340
+START_X = 335
 END_X = 370  # Adjust this value as needed
 
 # Define the range of x-coordinates to check
-JUMP_RISK = 589
+JUMP_RISK = 575
 DUCK_RISK = 521
 
 
 def check_for_jump(screenshot, mode):
     # Check each pixel in the line
-    for x in range(START_X, END_X + 1):
-        if mode == "light":
-            if screenshot[JUMP_RISK, x] < 100:
-                return True
-        else:
-            if screenshot[JUMP_RISK, x] > 100:
-                return True
+    for y in range(JUMP_RISK, JUMP_RISK + 4):
+        for x in range(START_X, END_X + 1):
+            if mode == "light":
+                print(screenshot[y, x])
+                if screenshot[y, x] < 100:
+                    return True
+            else:
+                print(screenshot[y, x])
+                if screenshot[y, x] > 100:
+                    return True
     return False
 
 
 def check_for_duck(screenshot, mode):
     # Check each pixel in the line
-    for x in range(START_X - 50, END_X - 49):
-        if mode == "light":
-            if screenshot[DUCK_RISK, x] < 100:
-                return True
-        else:
-            if screenshot[DUCK_RISK, x] > 100:
-                return True
+    for y in range(DUCK_RISK, DUCK_RISK + 4):
+        for x in range(START_X - 50, END_X - 49):
+            if mode == "light":
+                if screenshot[y, x] < 100:
+                    return True
+            else:
+                if screenshot[y, x] > 100:
+                    return True
     return False
 
 
@@ -56,7 +60,7 @@ while True:
     # Check which mode we're in (light or dark)
     if screenshot[640, 400] > 220:
         # Light Mode
-        print("light mode")
+        # print("light mode")
         if check_for_jump(screenshot, "light"):
             print("press UP")
             pyautogui.press('up')
@@ -67,7 +71,7 @@ while True:
             pyautogui.keyUp('down')
     else:
         # Dark Mode
-        print("dark mode")
+        # print("dark mode")
         if check_for_jump(screenshot, "dark"):
             print("press UP")
             pyautogui.press('up')
