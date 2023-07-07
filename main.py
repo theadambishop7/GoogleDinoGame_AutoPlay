@@ -4,36 +4,42 @@
 
 import pyautogui
 import time
-from PIL import Image, ImageGrab
+from PIL import Image
 from mss import mss
+import numpy as np
 
 # Define the range of x-coordinates to check
-START_X = 360
-END_X = 395  # Adjust this value as needed
+START_X = 340
+END_X = 370  # Adjust this value as needed
 
-LIGHT = (255, 255, 255)
-DARK = (32, 33, 35)
+# Define the range of x-coordinates to check
+JUMP_RISK = 589
+DUCK_RISK = 521
 
 
 def check_for_jump(screenshot, mode):
     # Check each pixel in the line
     for x in range(START_X, END_X + 1):
-        pixel = screenshot.getpixel((x, 589))
-        if pixel[:3] != mode:  # Ignore the alpha channel if present
-            return True
+        if mode == "light":
+            if screenshot[JUMP_RISK, x] < 100:
+                return True
+        else:
+            if screenshot[JUMP_RISK, x] > 100:
+                return True
     return False
 
 
 def check_for_duck(screenshot, mode):
     # Check each pixel in the line
-    for x in range(START_X, END_X + 1):
-        pixel = screenshot.getpixel((x, 521))  # Print debug information
-        if pixel[:3] != mode:  # Ignore the alpha channel if present
-            return True
+    for x in range(START_X - 50, END_X - 49):
+        if mode == "light":
+            if screenshot[DUCK_RISK, x] < 100:
+                return True
+        else:
+            if screenshot[DUCK_RISK, x] > 100:
+                return True
     return False
 
-
-current_mode = "light"
 
 time.sleep(2)
 pyautogui.press('space')
@@ -41,22 +47,20 @@ pyautogui.press('space')
 while True:
     # Take a screenshot
     with mss() as sct:
-        # Grab the first monitor
-        monitor = sct.monitors[1]
-        # Get raw pixels from the screen
-        sct_img = sct.grab(monitor)
-
-        # Create the Image
-        screenshot = Image.frombytes("RGB", sct_img.size, sct_img.bgra, "raw", "BGRX")
+        mss_image = sct.grab(sct.monitors[1])  # mss object
+        im = Image.frombytes("RGB", mss_image.size, mss_image.bgra, "raw", "BGRX").convert('L')
+        '''there is a bug in PIL module which does not let frombyte fuction to convert image directly to 
+        grayscale (denoted by L) once its fixed you can use L directly in place of RGB as an argument'''
+        screenshot = np.array(im)
 
     # Check which mode we're in (light or dark)
-    if screenshot.getpixel((640, 400))[:3] == (255, 255, 255):
+    if screenshot[640, 400] > 220:
         # Light Mode
         print("light mode")
-        if check_for_jump(screenshot, LIGHT):
+        if check_for_jump(screenshot, "light"):
             print("press UP")
             pyautogui.press('up')
-        if check_for_duck(screenshot, LIGHT):
+        if check_for_duck(screenshot, "light"):
             print("press DOWN")
             pyautogui.keyDown('down')
             time.sleep(.2)
@@ -64,13 +68,10 @@ while True:
     else:
         # Dark Mode
         print("dark mode")
-        if current_mode == "light":
-            time.sleep(2)
-            current_mode = "dark"
-        if check_for_jump(screenshot, DARK):
+        if check_for_jump(screenshot, "dark"):
             print("press UP")
             pyautogui.press('up')
-        if check_for_duck(screenshot, DARK):
+        if check_for_duck(screenshot, "dark"):
             print("press DOWN")
             pyautogui.keyDown('down')
             time.sleep(.2)
